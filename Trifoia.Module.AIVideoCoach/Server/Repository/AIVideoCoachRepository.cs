@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Oqtane.Modules;
 using System.Threading.Tasks;
+using Trifoia.Module.AIVideoCoach.Models;
 
 namespace Trifoia.Module.AIVideoCoach.Repository
 {
@@ -15,101 +16,37 @@ namespace Trifoia.Module.AIVideoCoach.Repository
             _factory = factory;
         }
 
-        public IEnumerable<Models.AIVideoCoach> GetAIVideoCoachs()
+        // Save an embedding to the database
+        public async Task<bool> AddEmbedding(TextEmbedding embedding)
         {
             using var db = _factory.CreateDbContext();
-            return db.AIVideoCoach.ToList();
-        }
-
-        public Models.AIVideoCoach GetAIVideoCoach(int AIVideoCoachId)
-        {
-            return GetAIVideoCoach(AIVideoCoachId, true);
-        }
-
-        public Models.AIVideoCoach GetAIVideoCoach(int AIVideoCoachId, bool tracking)
-        {
-            using var db = _factory.CreateDbContext();
-            if (tracking)
+            db.TextEmbedding.Add(embedding);
+            var numAdded = await db.SaveChangesAsync();
+            if (numAdded > 0)
             {
-                return db.AIVideoCoach.Find(AIVideoCoachId);
+                return true;
             }
-            else
+            return false;
+        }
+
+        // Retrieve all embeddings from the database
+        public async Task<List<TextEmbedding>> GetEmbeddedChunksAsync()
+        {
+            using var db = _factory.CreateDbContext();
+            return await db.TextEmbedding.ToListAsync();
+        }
+
+        public async Task<bool> DeleteEmbeddingsAsync(string Title)
+        {
+            using var db = _factory.CreateDbContext();
+            var embeddings = await db.TextEmbedding.Where(item => item.Title == Title).ToListAsync();
+            db.TextEmbedding.RemoveRange(embeddings);
+            var numDeleted = await db.SaveChangesAsync();
+            if (numDeleted > 0)
             {
-                return db.AIVideoCoach.AsNoTracking().FirstOrDefault(item => item.AIVideoCoachId == AIVideoCoachId);
+                return true;
             }
-        }
-
-        public Models.AIVideoCoach AddAIVideoCoach(Models.AIVideoCoach AIVideoCoach)
-        {
-            using var db = _factory.CreateDbContext();
-            db.AIVideoCoach.Add(AIVideoCoach);
-            db.SaveChanges();
-            return AIVideoCoach;
-        }
-
-        public Models.AIVideoCoach UpdateAIVideoCoach(Models.AIVideoCoach AIVideoCoach)
-        {
-            using var db = _factory.CreateDbContext();
-            db.Entry(AIVideoCoach).State = EntityState.Modified;
-            db.SaveChanges();
-            return AIVideoCoach;
-        }
-
-        public void DeleteAIVideoCoach(int AIVideoCoachId)
-        {
-            using var db = _factory.CreateDbContext();
-            Models.AIVideoCoach AIVideoCoach = db.AIVideoCoach.Find(AIVideoCoachId);
-            db.AIVideoCoach.Remove(AIVideoCoach);
-            db.SaveChanges();
-        }
-
-
-        public async Task<IEnumerable<Models.AIVideoCoach>> GetAIVideoCoachsAsync(int ModuleId)
-        {
-            using var db = _factory.CreateDbContext();
-            return await db.AIVideoCoach.Where(item => item.ModuleId == ModuleId).ToListAsync();
-        }
-
-        public async Task<Models.AIVideoCoach> GetAIVideoCoachAsync(int AIVideoCoachId)
-        {
-            return await GetAIVideoCoachAsync(AIVideoCoachId, true);
-        }
-
-        public async Task<Models.AIVideoCoach> GetAIVideoCoachAsync(int AIVideoCoachId, bool tracking)
-        {
-            using var db = _factory.CreateDbContext();
-            if (tracking)
-            {
-                return await db.AIVideoCoach.FindAsync(AIVideoCoachId);
-            }
-            else
-            {
-                return await db.AIVideoCoach.AsNoTracking().FirstOrDefaultAsync(item => item.AIVideoCoachId == AIVideoCoachId);
-            }
-        }
-
-        public async Task<Models.AIVideoCoach> AddAIVideoCoachAsync(Models.AIVideoCoach AIVideoCoach)
-        {
-            using var db = _factory.CreateDbContext();
-            db.AIVideoCoach.Add(AIVideoCoach);
-            await db.SaveChangesAsync();
-            return AIVideoCoach;
-        }
-
-        public async Task<Models.AIVideoCoach> UpdateAIVideoCoachAsync(Models.AIVideoCoach AIVideoCoach)
-        {
-            using var db = _factory.CreateDbContext();
-            db.Entry(AIVideoCoach).State = EntityState.Modified;
-            await db.SaveChangesAsync();
-            return AIVideoCoach;
-        }
-
-        public async Task DeleteAIVideoCoachAsync(int AIVideoCoachId)
-        {
-            using var db = _factory.CreateDbContext();
-            Models.AIVideoCoach AIVideoCoach = db.AIVideoCoach.Find(AIVideoCoachId);
-            db.AIVideoCoach.Remove(AIVideoCoach);
-            await db.SaveChangesAsync();
+            return false;
         }
     }
 }

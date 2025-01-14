@@ -1,0 +1,42 @@
+﻿
+@namespace Trifoia.Module.AIVideoCoach
+@inherits ModuleBase
+
+
+@if (State.IsAssistant)
+{
+    // Render the assistant's message card
+    <MudPaper Class="@GetClass(State.Streaming)" Elevation="1"  Style="@($"background:{Colors.Blue.Lighten5};")">
+        <!-- Display the name of the sender (AI Assistant) -->
+        <MudText Typo="Typo.subtitle1" Class="sender-name" Color="Color.Dark">AI Assistant</MudText>
+        <!-- Layout the assistant's avatar and message text -->
+        <MudStack Row="true" AlignItems="AlignItems.Center">
+            <!-- Avatar with chat icon for the assistant -->
+            <MudAvatar Icon="Chat" Color="Color.Primary" Size="Size.Medium" Class="me-3" />
+            <MudStack>
+                        <!-- Display the assistant's message or a placeholder if the text is empty -->
+                <MudText Typo="Typo.body1" Class="message-text" Color="Color.Dark">
+                    @((MarkupString)(string.IsNullOrEmpty(State.TextContent) ? "..." : State.TextContent))
+                </MudText>
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+}
+else
+{
+    // Render the user's message card
+    <MudPaper Class="p-3 m-3 rounded-1 user" Elevation="1" Style="@($"background:{Colors.Blue.Lighten5};")">
+        <!-- Display the user's name -->
+        <MudText Typo="Typo.subtitle1" Class="sender-name" Color="Color.Dark">@PageState.User.DisplayName</MudText>
+        <!-- Layout the user's avatar and message text in reverse order -->
+        <MudStack Row="true" Reverse="true" AlignItems="AlignItems.Center">
+            <!-- Avatar with person icon for the user -->
+            <MudAvatar Icon="Person" Color="Color.Secondary" Size="Size.Medium" Class="me-3"/>
+            <MudStack>
+                <!-- Display the user's message content -->
+                <MudText Typo="Typo.body1" Align="Align.End" Class="message-text" Color="Color.Dark">@State.TextContent</MudText>
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+}
+

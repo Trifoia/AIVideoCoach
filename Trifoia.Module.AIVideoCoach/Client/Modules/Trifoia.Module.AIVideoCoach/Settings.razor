@@ -1,21 +1,68 @@
 @namespace Trifoia.Module.AIVideoCoach
 @inherits ModuleBase
 
-@* Required *@
-<MudThemeProvider IsDarkMode=true />
-<MudPopoverProvider />
 
-@* Needed for dialogs
-<MudDialogProvider />*@
 
-@* Needed for snackbars
-<MudSnackbarProvider />*@
-@if(!_loading){
+@if (!loading)
+{
     <div class="container">
         <div class="row mb-1 align-items-center">
-            <Label Class="col-sm-3" For="value" HelpText="Enter a value" ResourceKey="SettingName" ResourceType="@resourceType">Name: </Label>
+            <label class="form-label col-sm-3" for="Title">Title: </label>
             <div class="col-sm-9">
-                <input id="value" type="text" class="form-control" @bind="@_settingsVM.Value" />
+                <input id="Title" class="form-control" @bind="title" />
+            </div>
+        </div>
+        <div class="row mb-1 align-items-center">
+            <label class="form-label col-sm-3" for="videoUrl">Video Url: </label>
+            <div class="col-sm-9">
+                <input id="videoUrl" class="form-control" @bind="videoUrl" />
+            </div>
+        </div>
+        <div class="row mb-1 align-items-center">
+            <label class="form-label col-sm-3" for="fileUpload">Add File: </label>
+            <div class="col-sm-9" id="fileUpload">
+                <FileManager OnUpload="fileId => HandleUpload(fileId)"></FileManager>
+            </div>
+        </div>
+        <div class="row mb-1 align-items-center">
+            <label class="form-label col-sm-3" for="fileDelete">Delete Embedding: </label>
+            <div class="col-sm-9" id="fileDelete">
+                <div class="row mb-1">
+                    <div class="col-12">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th style="background-color: white; color: black;">Title</th>
+                                    <th style="background-color: white; color: black;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (embeddingTitles?.Count > 0)
+                                {
+                                    @foreach (var title in embeddingTitles)
+                                    {
+                                        <tr>
+                                            <td style="background-color: white; color: black;">@title</td>
+                                            <td style="background-color: white; color: black;">
+                                                <button class="btn btn-danger btn-sm"
+                                                        @onclick="() => OnDeleteEmbedding(title)"
+                                                @onclick:preventDefault>
+                                                    Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td style="background-color: white; color: black;" colspan="2" class="text-center">No embeddings found.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -7,54 +7,164 @@ using Oqtane.Modules;
 using Oqtane.Services;
 using Oqtane.Models;
 using Oqtane.Shared;
+using System.Runtime.CompilerServices;
+using Trifoia.Module.AIVideoCoach.Services;
+using Microsoft.Extensions.Azure;
+using System.IO;
+using Trifoia.Module.AIVideoCoach.Models;
+using System.IO.Enumeration;
+using Trifoia.Module.AIVideoCoach;
 
 
 namespace Trifoia.Module.AIVideoCoach
-{ 
-    public partial class Settings: ModuleBase
+{
+    public partial class Settings : ModuleBase
     {
         [Inject] public ISettingService SettingService { get; set; }
-        [Inject] public IStringLocalizer<Settings> Localizer{ get; set; }
-		
-		private string resourceType = "Trifoia.Module.AIVideoCoach.Settings, Trifoia.Module.AIVideoCoach.Client.Oqtane"; // for localization
-        public override string Title => "AIVideoCoach Settings";
+        [Inject] public IStringLocalizer<Settings> Localizer { get; set; }
+        [Inject] NavigationManager NavigationManager { get; set; }
+        [Inject] AIVideoCoachService ChatBotService { get; set; }
+        [Inject] public IFileService FileService { get; set; }
+
+        private string resourceType = "Trifoia.Module.ChatBot.Settings, Trifoia.Module.Pride.Client.Oqtane"; // for localization
+
+        public override string Title => "ChatBot Settings";
+
         private SettingsViewModel _settingsVM;
-        private bool _loading = true;
-        private string _value;
-        public override List<Resource> Resources => new List<Resource>()
-            {
-                new Resource { ResourceType = ResourceType.Stylesheet,  Url = "https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" },
-                new Resource { ResourceType = ResourceType.Stylesheet,  Url = "_content/MudBlazor/MudBlazor.min.css" },
-                new Resource { ResourceType = ResourceType.Stylesheet,  Url = ModulePath() + "Module.css" },
-                new Resource { ResourceType = ResourceType.Script,     Url = "_content/MudBlazor/MudBlazor.min.js", Location = ResourceLocation.Body, Level = ResourceLevel.Site },
-                new Resource { ResourceType = ResourceType.Script,      Url = ModulePath() + "Module.js" },
-            };
+        bool loading;
+        public string returnURL;
+        public string videoUrl;
+        public string title;
+        public List<string> embeddingTitles = new List<string>();
+
+
         protected override async Task OnInitializedAsync()
         {
+            loading = true;
+
             try
             {
                 var moduleSettings = await SettingService.GetModuleSettingsAsync(ModuleState.ModuleId);
                 _settingsVM = new SettingsViewModel(SettingService, moduleSettings);
-                _loading = false;
             }
             catch (Exception ex)
             {
                 AddModuleMessage(ex.Message, MessageType.Error);
+            }
+
+            loading = false;
+        }
+
+        protected override async Task OnParametersSetAsync()
+        {
+            if (!ShouldRender()) return;
+
+            var uri = new Uri(NavigationManager.Uri);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            returnURL = query.Get("returnUrl") ?? "/";
+            PageState.ReturnUrl = returnURL;
+
+            var embeddings = await ChatBotService.GetEmbeddedChunksAsync();
+
+            if (embeddings.Embeddings is not null)
+            {
+                foreach (var embedding in embeddings.Embeddings)
+                {
+                    if (!embeddingTitles.Contains(embedding.Title))
+                    {
+                        embeddingTitles.Add(embedding.Title);
+                    }
+                }
             }
         }
 
         public async Task UpdateSettings()
         {
+
+            //Dictionary<string, string> settings = await SettingService.GetModuleSettingsAsync(ModuleState.ModuleId);
+            //await SettingService.UpdateModuleSettingsAsync(settings, ModuleState.ModuleId);
+        }
+
+        private async Task HandleUpload(int fileId)
+        {
             try
             {
-                Dictionary<string, string> settings = await SettingService.GetModuleSettingsAsync(ModuleState.ModuleId);
-                _settingsVM.SetSettings(SettingService, settings);
-                await SettingService.UpdateModuleSettingsAsync(settings, ModuleState.ModuleId);
+                var file = await FileService.GetFileAsync(fileId);
+                // Fetch the uploaded file details using the File ID
+                // Check for files in root/Rag Docs and embed their content
+                string ragDocsDirectory = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                         $"wwwroot/Content/Tenants/{PageState.Alias.TenantId}/Sites/{PageState.Alias.SiteId}/Rag Docs"); // Tenant and Site folders
+
+                var txtFile = Directory.GetFiles(ragDocsDirectory, file.Name);
+
+                if (txtFile != null)
+                {
+                    if (file.Extension == "txt")
+                    {
+
+                        var txtEmbedding = new TextEmbedding()
+                        {
+                            Title = title,
+                            Text = await System.IO.File.ReadAllTextAsync(txtFile[0]),
+                            Embedding = null
+                        };
+                        if (!string.IsNullOrWhiteSpace(txtEmbedding.Text))
+                        {
+                            // Embed the content of the file
+                            await ChatBotService.ChunkText(txtEmbedding);
+                            embeddingTitles.Add(txtEmbedding.Title);
+                        }
+                    }
+
+                    if (file.Extension == "vtt")
+                    {
+
+                        var vttEmbedding = new TextEmbedding()
+                        {
+                            Title = title,
+                            VideoUrl = videoUrl,
+                            Text = await System.IO.File.ReadAllTextAsync(txtFile[0]),
+                            Embedding = null
+                        };
+
+                        if (!string.IsNullOrWhiteSpace(vttEmbedding.Text))
+                        {
+                            // Embed the content of the file
+                            await ChatBotService.ChunkTextFromVttContentAsync(vttEmbedding);
+                            embeddingTitles.Add(vttEmbedding.Title);
+
+                        }
+                    }
+                    else
+                    {
+                        await logger.LogError("Error: Uploaded file not found.");
+                    }
+                }
+                StateHasChanged();
+
+            }
+            catch (Exception ex)
+            {
+                await logger.LogError($"Error retrieving uploaded file details: {ex.Message}");
+            }
+        }
+
+
+
+        public async Task OnDeleteEmbedding(string title)
+        {
+            try
+            {
+                await ChatBotService.DeleteEmbeddingsAsync(title);
+                embeddingTitles.Remove(title);
             }
             catch (Exception ex)
             {
                 AddModuleMessage(ex.Message, MessageType.Error);
             }
+
+            StateHasChanged();
         }
     }
 }

@@ -1,58 +1,71 @@
 @namespace Trifoia.Module.AIVideoCoach
 @inherits ModuleBase
-@* Required *@
-<MudThemeProvider IsDarkMode=true />
-<MudPopoverProvider />
 
-@* Needed for dialogs 
-<MudDialogProvider />*@
 
-@* Needed for snackbars 
-<MudSnackbarProvider />*@
+@inject IJSRuntime JsOp
+@attribute [StreamRendering(true)] // Enables stream rendering for the component
 
-@if (_AIVideoCoachs == null)
+
+@if (PageState.EditMode)
 {
-<p><em>Loading...</em></p>
+    <MudPaper Style="position:relative;" Class="m-2">
+        <MudText Color="Color.Primary" Typo="Typo.h6">@moduleName Module</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@MudBlazor.Icons.Material.Filled.Settings" Href="@settingsUrl">Settings</MudButton>
+    </MudPaper>
+}
+else if (IsLoaded)
+{
+    // Render the chat interface when content is loaded
+    <MudPaper Class="chat" Elevation="3">
+        <MudPaper class="messages-scroller" Elevation="0">
+            <MudPaper class="messages" Elevation="0">
+                <!-- Render the initial chat message -->
+                <ChatMessage State="initialMessage" />
+                <!-- Render the list of messages dynamically -->
+                @for (var i = 0; i < messages.Count; i++)
+                {
+                    var id = messages[i].Id.ToString();
+                    var state = messages[i]!;
+                    <ChatMessage @key="@id" State="@state" />
+                }
+            </MudPaper>
+        </MudPaper>
+        <!-- Input and send button at the bottom of the chat interface -->
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="sticky-bottom mt-3 p-3">
+            <MudTextField @bind-value="@userMessageText" Class="flex-grow-1 me-3" Variant="Variant.Outlined" Label="Chat Message" />
+            <MudButton Type="submit" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(string.IsNullOrWhiteSpace(userMessageText) || responding)" OnClick="@(async () => await SendMessage())">
+                Send
+            </MudButton>
+        </MudStack>
+    </MudPaper>
 }
 else
 {
-<ActionLink Action="Add" Security="SecurityAccessLevel.Edit" Text="Add AIVideoCoach" ResourceKey="Add" />
-<br />
-<br />
-    @if (_AIVideoCoachs.Any())
-    {
-        <MudContainer MaxWidth="MaxWidth.ExtraLarge">
-            <MudText Class="mb-4">Enter data for the AIVideoCoach module</MudText>
-            <MudTable Items="@_AIVideoCoachs">
-                <ColGroup>
-                    <col style="width: 10px;" />
-                    <col style="width: 10px;" />
-                    <col />
-                </ColGroup>
-                <HeaderContent>
-                    <MudTh>&nbsp;</MudTh>
-                    <MudTh>&nbsp;</MudTh>
-                    <MudTh>@Localizer["Name"]</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd Class="pa-2"><ActionLink Action="Edit" Parameters="@($"id=" + context.AIVideoCoachId.ToString())" ResourceKey="Edit" /></MudTd>
-                    <MudTd Class="pa-2"><ActionDialog Header="Delete AIVideoCoach" Message="Are You Sure You Wish To Delete This AIVideoCoach?" Action="Delete" Security="SecurityAccessLevel.Edit" Class="btn btn-danger" OnClick="@(async () => await Delete(context))" ResourceKey="Delete" /></MudTd>
-                    <MudTd DataLabel="Nr">@context.Name</MudTd>
-                </RowTemplate>
-                <PagerContent>
-                    <MudPaper Outlined="true" Class="border-dashed">
-                        <MudStack Justify="Justify.SpaceBetween" Row="true">
-                            <MudPaper Class="pa-3"><ActionLink Action="Add" Security="SecurityAccessLevel.Edit" Text="Add AIVideoCoach" ResourceKey="Add" /></MudPaper>
-                            <MudPaper Class="pa-3"><MudTablePager PageSizeOptions="new int[]{10, 25, 50, 100}" /></MudPaper>
-                        </MudStack>
-                    </MudPaper>
-                </PagerContent>
-            </MudTable>
-        </MudContainer>
-    }
-    else
-    {
-        <MudPaper Class="pa-3"><ActionLink Action="Add" Security="SecurityAccessLevel.Edit" Text="Add AIVideoCoach" ResourceKey="Add" /></MudPaper>
-        <p>@Localizer["Message.DisplayNone"]</p>
-    }
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="chat-bot-container">
+        <!-- Header -->
+        <MudText Typo="Typo.h4" Align="Align.Center" Class="mt-3">Trifoia Chat Bot</MudText>
+        <!-- Loading Skeleton -->
+        <MudPaper Class="chat" Elevation="3">
+            <MudPaper Class="messages-scroller" Elevation="0">
+                <MudPaper class="messages" Elevation="0">
+                    <!-- Simulate loading assistant's initial message -->
+                    <MudSkeleton Width="40%" Height="200px" SkeletonType="SkeletonType.Text" Animation="Animation.Wave" Class="m-2" />
+                    <!-- Simulate loading user messages -->
+                    <MudSkeleton Width="80%" Height="50px" SkeletonType="SkeletonType.Text" Animation="Animation.Wave" Class="m-2" />
+                    <MudSkeleton Width="70%" Height="50px" SkeletonType="SkeletonType.Text" Animation="Animation.Wave" Class="m-2" />
+                    <MudSkeleton Width="90%" Height="50px" SkeletonType="SkeletonType.Text" Animation="Animation.Wave" Class="m-2" />
+                </MudPaper>
+            </MudPaper>
+
+            <!-- Input Section -->
+            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="sticky-bottom mt-3 p-3">
+                <MudText Disabled="true" Class="flex-grow-1 me-3" Variant="Variant.Outlined" Label="Chat Message" />
+                <MudButton Disabled="true" Variant="Variant.Filled" Color="Color.Primary">
+                    Send
+                </MudButton>
+            </MudStack>
+        </MudPaper>
+    </MudContainer>
+
 }
+

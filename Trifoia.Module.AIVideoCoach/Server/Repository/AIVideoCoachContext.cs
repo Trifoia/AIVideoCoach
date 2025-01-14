@@ -9,7 +9,7 @@ namespace Trifoia.Module.AIVideoCoach.Repository
 {
     public class AIVideoCoachContext : DBContextBase, ITransientService, IMultiDatabase
     {
-        public virtual DbSet<Models.AIVideoCoach> AIVideoCoach { get; set; }
+        public virtual DbSet<Models.TextEmbedding> TextEmbedding { get; set; }
 
         public AIVideoCoachContext(IDBContextDependencies DBContextDependencies) : base(DBContextDependencies)
         {
@@ -20,7 +20,6 @@ namespace Trifoia.Module.AIVideoCoach.Repository
         {
             base.OnModelCreating(builder);
 
-            builder.Entity<Models.AIVideoCoach>().ToTable(ActiveDatabase.RewriteName("TrifoiaAIVideoCoach"));
         }
     }
 }

@@ -40,15 +40,5 @@
 		<file src="..\Server\bin\Release\net9.0\Microsoft.Extensions.AI.Abstractions.dll" target="lib\net9.0" />
 		<file src="..\Server\bin\Release\net9.0\OpenAI.dll" target="lib\net9.0" />
 		<file src="..\Server\bin\Release\net9.0\System.ClientModel.dll" target="lib\net9.0" />
-
-		<!-- ChatBot Client -->
-		<file src="..\Client\bin\Release\net9.0\Azure.AI.Inference.dll" target="lib\net9.0" />
-		<file src="..\Client\bin\Release\net9.0\Azure.AI.OpenAI.dll" target="lib\net9.0" />
-		<file src="..\Client\bin\Release\net9.0\Azure.Identity.dll" target="lib\net9.0" />
-		<file src="..\Client\bin\Release\net9.0\Microsoft.Extensions.AI.dll" target="lib\net9.0" />
-		<file src="..\Client\bin\Release\net9.0\Microsoft.Extensions.AI.Ollama.dll" target="lib\net9.0" />
-		<file src="..\Client\bin\Release\net9.0\Microsoft.Extensions.AI.OpenAI.dll" target="lib\net9.0" />
-		<file src="..\Client\bin\Release\net9.0\Microsoft.Extensions.AI.Abstractions.dll" target="lib\net9.0" />
-		<file src="..\Client\bin\Release\net9.0\OpenAI.dll" target="lib\net9.0" />
 	</files>
 </package>

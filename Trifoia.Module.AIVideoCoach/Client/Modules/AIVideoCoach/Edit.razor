@@ -1,0 +1,32 @@
+﻿
+
+@namespace Trifoia.Module.AIVideoCoach
+@inherits ModuleBase
+
+<div class="card p-4">
+    <h3 class="text-center mb-3">AI Video Coach Credentials</h3>
+
+    @if (_settingsVM == null)
+    {
+        <div class="alert alert-danger">
+            <p>Failed to load settings. Please contact support.</p>
+        </div>
+    }
+    else
+    {
+        <form novalidate>
+            @foreach (var kvp in _settingsVM.Settings)
+            {
+                <div class="mb-3">
+                    <label for="@kvp.Key" class="form-label">@kvp.Key</label>
+                    <input type="text" class="form-control" id="@kvp.Key" required
+                           @bind="_settingsVM.Settings[kvp.Key]" />
+                </div>
+            }
+
+            <div class="d-flex align-items-center justify-content-end mt-4">
+                <button type="button" class="btn btn-primary" @onclick="SaveSettings">Save Settings</button>
+            </div>
+        </form>
+    }
+</div>

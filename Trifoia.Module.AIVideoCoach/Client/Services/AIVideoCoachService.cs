@@ -9,6 +9,8 @@ using Trifoia.Module.AIVideoCoach.Models;
 using Microsoft.Extensions.AI;
 using System;
 using System.Text;
+using Trifoia.Module.AIVideoCoach.Shared.Interfaces;
+using Oqtane.Services;
 
 
 
@@ -17,17 +19,18 @@ namespace Trifoia.Module.AIVideoCoach.Services
     public class AIVideoCoachService : ResponseServiceBase, IService
     {
         private IChatClient _client;
-        private readonly HttpClient _httpClient;
+        private string Apiurl => CreateApiUrl("AIVideoCoach");
 
-        public AIVideoCoachService(IHttpClientFactory http, SiteState siteState, IChatClient client) : base(http, siteState)
+        public AIVideoCoachService(IHttpClientFactory http, SiteState siteState) : base(http, siteState)
         {
-            _httpClient = http.CreateClient();
-            _client = client;
 
         }
 
-        private string Apiurl => CreateApiUrl("ChatBot");
+        public async Task InitializeAsync(IChatClientFactory<IChatClient> factory)
+        {
+            _client = await factory.CreateAsync();
 
+        }
 
         /// <summary>
         /// Streaming chat.
@@ -230,7 +233,7 @@ namespace Trifoia.Module.AIVideoCoach.Services
             var data = responseTuple.Item1;
             var response = responseTuple.Item2;
 
-            if (response.IsSuccessStatusCode && data.Similarity > 0 && data.Embedding != null)
+            if (response.IsSuccessStatusCode && data is not null)
             {
                 // Return the data tuple and status code
                 return (data, response.StatusCode);

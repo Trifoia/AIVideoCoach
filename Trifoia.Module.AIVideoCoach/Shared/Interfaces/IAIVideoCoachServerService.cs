@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Trifoia.Module.AIVideoCoach.Models;
 
 namespace Trifoia.Module.AIVideoCoach.Services

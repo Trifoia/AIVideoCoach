@@ -9,10 +9,12 @@ using Trifoia.Module.AIVideoCoach.Services;
 using System.Text.Json;
 using System.Net.Http.Json;
 using Trifoia.Module.AIVideoCoach.Models;
-using System.ClientModel;
+using Oqtane.Services;
 
 namespace Trifoia.Module.AIVideoCoach.Services
 {
+    using Oqtane.Repository;
+    using Oqtane.Shared;
     using System.Net.Http.Headers;
     using System.Text;
     using System.Text.Json;
@@ -22,10 +24,10 @@ namespace Trifoia.Module.AIVideoCoach.Services
         private readonly HttpClient _httpClient;
         private readonly Uri _endpoint;
 
+
         public AzureOpenAIEmbeddingClient(Uri endpoint, string deploymentId, string apiKey)
         {
             _endpoint = new Uri($"{endpoint}/openai/deployments/{deploymentId}/embeddings?api-version=2023-05-15");
-
             _httpClient = new HttpClient();
             _httpClient.DefaultRequestHeaders.Add("api-key", apiKey);
         }

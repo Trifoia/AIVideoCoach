@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Oqtane.Modules;
 using System.Threading.Tasks;
 using Trifoia.Module.AIVideoCoach.Models;
+using System;
 
 namespace Trifoia.Module.AIVideoCoach.Repository
 {

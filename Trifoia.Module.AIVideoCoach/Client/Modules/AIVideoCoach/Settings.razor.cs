@@ -44,8 +44,8 @@ namespace Trifoia.Module.AIVideoCoach
 
             try
             {
-                var moduleSettings = await SettingService.GetModuleSettingsAsync(ModuleState.ModuleId);
-                _settingsVM = new SettingsViewModel(SettingService, moduleSettings);
+                var settings = await SettingService.GetSiteSettingsAsync(1);
+                _settingsVM = new SettingsViewModel(SettingService, settings);
             }
             catch (Exception ex)
             {
@@ -81,8 +81,9 @@ namespace Trifoia.Module.AIVideoCoach
         public async Task UpdateSettings()
         {
 
-            //Dictionary<string, string> settings = await SettingService.GetModuleSettingsAsync(ModuleState.ModuleId);
-            //await SettingService.UpdateModuleSettingsAsync(settings, ModuleState.ModuleId);
+            Dictionary<string, string> settings = await SettingService.GetSiteSettingsAsync(1);
+            _settingsVM.SetSettings(SettingService, settings);
+            await SettingService.UpdateSiteSettingsAsync(settings, 1);
         }
 
         private async Task HandleUpload(int fileId)

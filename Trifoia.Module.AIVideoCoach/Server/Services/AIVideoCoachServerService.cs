@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -9,6 +10,7 @@ using Oqtane.Modules;
 using Trifoia.Module.AIVideoCoach.Models;
 using Trifoia.Module.AIVideoCoach.Repository;
 using Trifoia.Module.AIVideoCoach.Services;
+using Trifoia.Module.AIVideoCoach.Shared.Interfaces;
 
 
 
@@ -18,15 +20,15 @@ namespace Trifoia.Module.AIVideoCoach.Services
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration configuration;
-        private readonly AIVideoCoachRepository _PNRRepository;
+        private readonly AIVideoCoachRepository _AIVideoCoachRepository;
         private readonly IEmbeddingClient _embeddingClient;
 
-        public AIVideoCoachServerService(IEmbeddingClient embeddingClient, HttpClient httpClient, IConfiguration configuration, AIVideoCoachRepository PNRRepository)
+        public AIVideoCoachServerService(IChatClientFactory<IEmbeddingClient> embeddingClientFactory, HttpClient httpClient, IConfiguration configuration, AIVideoCoachRepository AIVideoCoachRepository)
         {
-            _embeddingClient = embeddingClient;
+            _embeddingClient = embeddingClientFactory.Create();
             _httpClient = httpClient;
             this.configuration = configuration;
-            _PNRRepository = PNRRepository;
+            _AIVideoCoachRepository = AIVideoCoachRepository;
         }
         public async Task<(double, TextEmbedding)> EmbedQueryAsync(string query)
         {
@@ -114,7 +116,7 @@ namespace Trifoia.Module.AIVideoCoach.Services
         public async Task<(double, TextEmbedding)> FindMostRelevantChunkAsync(float[] requestEmbedding)
         {
             // Retrieve all stored embeddings from the repository
-            var storedEmbeddings = await _PNRRepository.GetEmbeddedChunksAsync();
+            var storedEmbeddings = await _AIVideoCoachRepository.GetEmbeddedChunksAsync();
 
             if (storedEmbeddings == null || !storedEmbeddings.Any())
             {
@@ -177,12 +179,12 @@ namespace Trifoia.Module.AIVideoCoach.Services
             }
             try
             {
-                var success = await _PNRRepository.AddEmbedding(embedding);
+                var success = await _AIVideoCoachRepository.AddEmbedding(embedding);
                 return success;
             }
             catch (Exception)
             {
-                throw new Exception("Failed to post Embedding"); 
+                throw new Exception("Failed to post Embedding");
             }
         }
     }

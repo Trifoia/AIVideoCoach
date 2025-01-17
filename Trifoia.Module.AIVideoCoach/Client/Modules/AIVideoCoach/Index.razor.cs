@@ -16,6 +16,8 @@ using Trifoia.Module.AIVideoCoach.Models;
 using Microsoft.AspNetCore.Components.Web;
 using System.Linq;
 using Trifoia.Module.AIVideoCoach;
+using Trifoia.Module.AIVideoCoach.Shared.Interfaces;
+using Microsoft.Extensions.AI;
 
 namespace Trifoia.Module.AIVideoCoach;
 
@@ -27,6 +29,7 @@ public partial class Index : ModuleBase
     [Inject] public AIVideoCoachService ChatBotService { get; set; }
     // The API for communicating with the LLM.
     [Inject] internal AIVideoCoachService? ChatHandler { get; init; }
+    [Inject] IChatClientFactory<IChatClient> ChatClientFactory { get; set; }
 
     //View
     public string moduleName;
@@ -35,6 +38,8 @@ public partial class Index : ModuleBase
     private bool IsLoaded;
     private bool responding;
     private SettingsViewModel _settingsVM;
+    private ElementReference form;
+    private bool validated;
 
     // Chat history.
     readonly List<Message> messages = [];
@@ -49,10 +54,16 @@ public partial class Index : ModuleBase
     {
         try
         {
-            moduleName = ModuleState.ModuleDefinition.Name;
-            var moduleSettings = await SettingService.GetModuleSettingsAsync(ModuleState.ModuleId);
-            _settingsVM = new SettingsViewModel(SettingService, moduleSettings);
-            IsLoaded = true;
+            var url = PageState.Uri.ToString();
+            if (url.Contains("/admin/"))
+            {
+                var editUrl = EditUrl("Edit");
+                NavigationManager.NavigateTo(editUrl);
+            }
+            else
+            {
+                IsLoaded = true;
+            }
         }
         catch (Exception ex)
         {
@@ -63,6 +74,13 @@ public partial class Index : ModuleBase
         // create the url for opening the module settings tab in edit mode.
         returnUrl = WebUtility.UrlEncode(PageState.Uri.AbsolutePath.ToString());
         settingsUrl = EditUrl("Settings", $"returnurl={returnUrl}&tab=ModuleSettings");
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!ShouldRender()) return;
+        await ChatBotService.InitializeAsync(ChatClientFactory);
+        await ChatHandler.InitializeAsync(ChatClientFactory);
     }
 
 
@@ -170,14 +188,12 @@ public partial class Index : ModuleBase
         return cannedResponses[index];
     }
 
-
-
-    public void OpenSettingsTab() => NavigationManager.NavigateTo(settingsUrl);
-
     static bool IsSuccessStatusCode(HttpStatusCode statusCode)
     {
         return (int)statusCode >= 200 && (int)statusCode <= 299;
     }
+
+    
 }
 
 
